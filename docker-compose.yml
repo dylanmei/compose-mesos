@@ -1,6 +1,3 @@
-# Based on https://github.com/breerly/fig-mesos
-# Note: use links: as a dependency graph for now, until https://github.com/docker/fig/pull/686 is resolved
-#
 # Zookeeper
 #
 # https://registry.hub.docker.com/u/jplock/zookeeper/
@@ -15,7 +12,7 @@ zk:
 # http://mesos.apache.org/documentation/latest/configuration/
 #
 mesos:
-  image: mesosphere/mesos-master:0.23.0-1.0.ubuntu1404
+  image: mesosphere/mesos-master:0.24.1-0.2.35.ubuntu1404
   ports:
     - "5050:5050"
   links:
@@ -36,7 +33,7 @@ mesos:
 # http://mesos.apache.org/documentation/latest/configuration/
 #
 slave1:
-  image: mesosphere/mesos-slave:0.23.0-1.0.ubuntu1404
+  image: mesosphere/mesos-slave:0.24.1-0.2.35.ubuntu1404
   ports:
     - "5051:5051"
   links:
@@ -57,7 +54,7 @@ slave1:
     - /proc:/host/proc:ro
 
 #slave2:
-#  image: mesosphere/mesos-slave:0.23.0-1.0.ubuntu1404
+#  image: mesosphere/mesos-slave:0.24.1-0.2.35.ubuntu1404
 #  ports:
 #    - "5052:5052"
 #  links:
@@ -80,7 +77,7 @@ slave1:
 # https://registry.hub.docker.com/u/mesosphere/marathon/
 #
 marathon:
-  image: mesosphere/marathon:v0.10.0
+  image: mesosphere/marathon:v0.11.0
   ports:
     - "8080:8080"
   links:
