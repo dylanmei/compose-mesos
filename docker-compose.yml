@@ -2,21 +2,20 @@
 #
 # https://registry.hub.docker.com/u/jplock/zookeeper/
 #
-zk:
+zookeeper:
   image: jplock/zookeeper:3.4.6
   log_driver: "none"
-#
+
 # Mesos master
 #
-# https://registry.hub.docker.com/u/redjack/mesos-master/
 # http://mesos.apache.org/documentation/latest/configuration/
 #
 mesos:
-  image: mesosphere/mesos-master:0.24.1-0.2.35.ubuntu1404
+  image: mesosphere/mesos-master:0.27.0-0.2.190.ubuntu1404
   ports:
     - "5050:5050"
   links:
-    - "zk:zookeeper"
+    - "zookeeper"
   #log_driver: "none"
   environment:
     MESOS_LOG_DIR: /var/log
@@ -29,15 +28,14 @@ mesos:
 #
 # Mesos slaves
 #
-# https://registry.hub.docker.com/u/redjack/mesos-slave/
 # http://mesos.apache.org/documentation/latest/configuration/
 #
 slave1:
-  image: mesosphere/mesos-slave:0.24.1-0.2.35.ubuntu1404
+  image: mesosphere/mesos-slave:0.27.0-0.2.190.ubuntu1404
   ports:
     - "5051:5051"
   links:
-    - "zk:zookeeper"
+    - "zookeeper"
     - "mesos"
   environment:
     MESOS_MASTER: zk://zookeeper:2181/mesos
@@ -53,34 +51,19 @@ slave1:
     - /sys/fs/cgroup:/sys/fs/cgroup
     - /proc:/host/proc:ro
 
-#slave2:
-#  image: mesosphere/mesos-slave:0.24.1-0.2.35.ubuntu1404
-#  ports:
-#    - "5052:5052"
-#  links:
-#    - "zk:zookeeper"
-#    - "mesos"
-#  environment:
-#    MESOS_MASTER: zk://zookeeper:2181/mesos
-#    MESOS_ISOLATOR: "cgroups/cpu,cgroups/mem"
-#    MESOS_CONTAINERIZERS: "docker,mesos"
-#    MESOS_EXECUTOR_REGISTRATION_TIMEOUT: "5mins"
-#    MESOS_HOSTNAME: docker.local
-#    MESOS_PORT: "5052"
-#    MESOS_LOG_DIR: /var/log
-#  volumes_from:
-#    - "slave1"
-
 #
 # Marathon
 #
 # https://registry.hub.docker.com/u/mesosphere/marathon/
 #
 marathon:
-  image: mesosphere/marathon:v0.11.0
+  image: mesosphere/marathon:v0.15.0
   ports:
     - "8080:8080"
   links:
-    - "zk:zookeeper"
+    - "zookeeper"
     - "mesos"
+  environment:
+    MARATHON_WEBUI_URL: "http://docker.local:8080"
+    MARATHON_MESOS_LEADER_UI_URL: "http://docker.local:5050"
   command: "--master zk://zookeeper:2181/mesos --zk zk://zookeeper:2181/marathon"
