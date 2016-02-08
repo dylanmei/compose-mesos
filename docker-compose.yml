@@ -57,7 +57,7 @@ slave1:
 # https://registry.hub.docker.com/u/mesosphere/marathon/
 #
 marathon:
-  image: mesosphere/marathon:v0.15.0
+  image: mesosphere/marathon:v0.15.1
   ports:
     - "8080:8080"
   links:
