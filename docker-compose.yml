@@ -1,69 +1,70 @@
-# Zookeeper
-#
-# https://registry.hub.docker.com/u/jplock/zookeeper/
-#
-zookeeper:
-  image: jplock/zookeeper:3.4.6
-  log_driver: "none"
+version: '2'
+services:
+  zookeeper:
+    image: jplock/zookeeper:3.4.6
+    logging:
+      driver: none
 
-# Mesos master
-#
-# http://mesos.apache.org/documentation/latest/configuration/
-#
-mesos:
-  image: mesosphere/mesos-master:0.27.0-0.2.190.ubuntu1404
-  ports:
-    - "5050:5050"
-  links:
-    - "zookeeper"
-  #log_driver: "none"
-  environment:
-    MESOS_LOG_DIR: /var/log
-    MESOS_CLUSTER: localmesos
-    MESOS_ZK: zk://zookeeper:2181/mesos
-    MESOS_HOSTNAME: docker.local
-    MESOS_WORK_DIR: /var/lib/mesos
-    MESOS_QUORUM: 1
+  # Mesos master
+  #
+  # http://mesos.apache.org/documentation/latest/configuration/
+  #
+  mesos:
+    image: mesosphere/mesos-master:0.28.1
+    ports:
+      - "5050:5050"
+    links:
+      - "zookeeper"
+    logging:
+      driver: none
+    environment:
+      MESOS_LOG_DIR: /var/log
+      MESOS_CLUSTER: localmesos
+      MESOS_ZK: zk://zookeeper:2181/mesos
+      # MESOS_HOSTNAME: $DOCKER_IP
+      MESOS_WORK_DIR: /var/lib/mesos
+      MESOS_QUORUM: 1
 
-#
-# Mesos slaves
-#
-# http://mesos.apache.org/documentation/latest/configuration/
-#
-slave1:
-  image: mesosphere/mesos-slave:0.27.0-0.2.190.ubuntu1404
-  ports:
-    - "5051:5051"
-  links:
-    - "zookeeper"
-    - "mesos"
-  environment:
-    MESOS_MASTER: zk://zookeeper:2181/mesos
-    MESOS_ISOLATOR: "cgroups/cpu,cgroups/mem"
-    MESOS_CONTAINERIZERS: "docker,mesos"
-    MESOS_EXECUTOR_REGISTRATION_TIMEOUT: "5mins"
-    MESOS_HOSTNAME: docker.local
-    MESOS_PORT: "5051"
-    MESOS_LOG_DIR: /var/log
-  volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-    - /usr/local/bin/docker:/usr/bin/docker:ro
-    - /sys/fs/cgroup:/sys/fs/cgroup
-    - /proc:/host/proc:ro
+  #
+  # Mesos slaves
+  #
+  # http://mesos.apache.org/documentation/latest/configuration/
+  #
+  slave1:
+    image: mesosphere/mesos-slave:0.28.1
+    ports:
+      - "5051:5051"
+    links:
+      - "zookeeper"
+      - "mesos"
+    environment:
+      MESOS_MASTER: zk://zookeeper:2181/mesos
+      MESOS_ISOLATOR: "cgroups/cpu,cgroups/mem"
+      # MESOS_CONTAINERIZERS: "docker,mesos"
+      MESOS_EXECUTOR_REGISTRATION_TIMEOUT: "5mins"
+      # MESOS_HOSTNAME: $DOCKER_IP
+      MESOS_PORT: "5051"
+      MESOS_LOG_DIR: /var/log
+    volumes:
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
+      # - /usr/bin/docker:/usr/bin/docker:ro
+      # - /usr/local/bin/docker:/usr/bin/docker:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup
+      - /proc:/host/proc:ro
 
-#
-# Marathon
-#
-# https://registry.hub.docker.com/u/mesosphere/marathon/
-#
-marathon:
-  image: mesosphere/marathon:v0.15.1
-  ports:
-    - "8080:8080"
-  links:
-    - "zookeeper"
-    - "mesos"
-  environment:
-    MARATHON_WEBUI_URL: "http://docker.local:8080"
-    MARATHON_MESOS_LEADER_UI_URL: "http://docker.local:5050"
-  command: "--master zk://zookeeper:2181/mesos --zk zk://zookeeper:2181/marathon"
+  #
+  # Marathon
+  #
+  # https://registry.hub.docker.com/u/mesosphere/marathon/
+  #
+  marathon:
+    image: mesosphere/marathon:v1.1.1
+    ports:
+      - "8080:8080"
+    links:
+      - "zookeeper"
+      - "mesos"
+    # environment:
+    #   MARATHON_WEBUI_URL: "http://$DOCKER_IP:8080"
+    #   MARATHON_MESOS_LEADER_UI_URL: "http://$DOCKER_IP:5050"
+    command: "--master zk://zookeeper:2181/mesos --zk zk://zookeeper:2181/marathon"
