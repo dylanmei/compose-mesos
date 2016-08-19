@@ -10,41 +10,37 @@ services:
   # http://mesos.apache.org/documentation/latest/configuration/
   #
   mesos:
-    image: mesosphere/mesos-master:0.28.1
+    image: mesosphere/mesos-master:1.0.0
     ports:
       - "5050:5050"
-    links:
-      - "zookeeper"
     logging:
       driver: none
     environment:
       MESOS_LOG_DIR: /var/log
       MESOS_CLUSTER: localmesos
       MESOS_ZK: zk://zookeeper:2181/mesos
-      # MESOS_HOSTNAME: $DOCKER_IP
+      MESOS_HOSTNAME: localhost
       MESOS_WORK_DIR: /var/lib/mesos
       MESOS_QUORUM: 1
 
-  #
-  # Mesos slaves
+  # Mesos agents
   #
   # http://mesos.apache.org/documentation/latest/configuration/
-  #
-  slave1:
-    image: mesosphere/mesos-slave:0.28.1
+
+  agent:
+    image: mesosphere/mesos-slave:1.0.0
     ports:
       - "5051:5051"
-    links:
-      - "zookeeper"
-      - "mesos"
+    logging:
+      driver: none
     environment:
       MESOS_MASTER: zk://zookeeper:2181/mesos
       MESOS_ISOLATOR: "cgroups/cpu,cgroups/mem"
-      # MESOS_CONTAINERIZERS: "docker,mesos"
       MESOS_EXECUTOR_REGISTRATION_TIMEOUT: "5mins"
-      # MESOS_HOSTNAME: $DOCKER_IP
+      MESOS_HOSTNAME: localhost
       MESOS_PORT: "5051"
-      MESOS_LOG_DIR: /var/log
+      MESOS_WORK_DIR: /var/lib/mesos
+      # MESOS_CONTAINERIZERS: "docker,mesos"
     volumes:
       # - /var/run/docker.sock:/var/run/docker.sock:ro
       # - /usr/bin/docker:/usr/bin/docker:ro
@@ -52,19 +48,15 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup
       - /proc:/host/proc:ro
 
-  #
   # Marathon
   #
-  # https://registry.hub.docker.com/u/mesosphere/marathon/
+  # https://mesosphere.github.io/marathon/
   #
   marathon:
-    image: mesosphere/marathon:v1.1.1
+    image: mesosphere/marathon:v1.1.2
     ports:
       - "8080:8080"
-    links:
-      - "zookeeper"
-      - "mesos"
-    # environment:
-    #   MARATHON_WEBUI_URL: "http://$DOCKER_IP:8080"
-    #   MARATHON_MESOS_LEADER_UI_URL: "http://$DOCKER_IP:5050"
+    environment:
+      MARATHON_WEBUI_URL: "http://localhost:8080"
+      MARATHON_MESOS_LEADER_UI_URL: "http://localhost:5050"
     command: "--master zk://zookeeper:2181/mesos --zk zk://zookeeper:2181/marathon"
